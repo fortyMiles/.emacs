@@ -1,0 +1,73 @@
+#!/usr/bin/python
+'''
+Chechs if you are in 'master' branch, and if you in master, you won't allow
+to modify/edit file in vi, just could 'view' it. You need to checkout to
+other branch like 'develop' branch.
+
+@author: Minchiuan Gao <minchiuan.gao@gmail.com>
+@built date: 2015-Dec-3
+'''
+import subprocess
+import sys
+
+
+def get_git_branch():
+    command = "git symbolic-ref --short HEAD"
+    command_list = command.split(' ')
+    process = subprocess.Popen(command_list, stdout=subprocess.PIPE)
+    out, err = process.communicate()
+    return str(out).strip()
+
+
+def run_vi(read_only):
+    if len(sys.argv) > 1:
+        file_name = sys.argv[1]
+
+        if read_only:
+            cmd = 'view'
+            subprocess.call([cmd, file_name])
+        else:
+            cmd = 'mvim'
+            arg = '-v'
+            subprocess.call([cmd, arg, file_name])
+    else:
+        subprocess.call(['mvim', '-v'])
+
+
+def hilite(string, green, bold):
+    '''
+    Changes string color in terminal.
+    '''
+    attr = []
+    if green:
+        # green
+        attr.append('32')
+    else:
+        # red
+        attr.append('31')
+
+    if bold:
+        attr.append('1')
+
+    return '\x1b[%sm%s\x1b[0m' % (';'.join(attr), string)
+
+
+def main():
+    MASTER = 'master'
+    branch = get_git_branch()
+    if_read_only = False
+    read = None
+    if branch == MASTER:
+        print("You are in the "),
+        print(hilite('master ', green=False, bold=True)),
+        print("Branch"),
+        print("You just could READ ONLY the file")
+        read = raw_input('input any key to continue, input q to quit')
+        if_read_only = True
+
+    if read != 'q':
+        run_vi(if_read_only)
+
+
+if __name__ == '__main__':
+    main()
